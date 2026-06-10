@@ -1,46 +1,37 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const body = await request.json();
-    const { title, description, priority, completed, dueDate } = body;
+  const body = await request.json();
+  const { title, description, priority, completed, dueDate } = body;
+  const validPriorities = ["HIGH", "MEDIUM", "LOW"];
 
-    const validPriorities = ["HIGH", "MEDIUM", "LOW"];
+  const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+  if (title !== undefined) updates.title = title.trim();
+  if (description !== undefined) updates.description = description?.trim() || null;
+  if (priority !== undefined && validPriorities.includes(priority)) updates.priority = priority;
+  if (completed !== undefined) updates.completed = completed;
+  if (dueDate !== undefined) updates.dueDate = dueDate || null;
 
-    const task = await prisma.task.update({
-      where: { id: params.id },
-      data: {
-        ...(title !== undefined && { title: title.trim() }),
-        ...(description !== undefined && { description: description?.trim() || null }),
-        ...(priority !== undefined && validPriorities.includes(priority) && { priority }),
-        ...(completed !== undefined && { completed }),
-        ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
-      },
-    });
-    return NextResponse.json(task);
-  } catch (error: unknown) {
-    if ((error as { code?: string }).code === "P2025") {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
-    }
-    return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
-  }
+  const { data, error } = await supabase
+    .from("Task")
+    .update(updates)
+    .eq("id", params.id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
 }
 
 export async function DELETE(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    await prisma.task.delete({ where: { id: params.id } });
-    return new NextResponse(null, { status: 204 });
-  } catch (error: unknown) {
-    if ((error as { code?: string }).code === "P2025") {
-      return NextResponse.json({ error: "Task not found" }, { status: 404 });
-    }
-    return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });
-  }
+  const { error } = await supabase.from("Task").delete().eq("id", params.id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return new NextResponse(null, { status: 204 });
 }

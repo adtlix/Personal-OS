@@ -1,42 +1,34 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const body = await request.json();
-    const { name, description, color } = body;
+  const body = await request.json();
+  const { name, description, color } = body;
 
-    const habit = await prisma.habit.update({
-      where: { id: params.id },
-      data: {
-        ...(name !== undefined && { name: name.trim() }),
-        ...(description !== undefined && { description: description?.trim() || null }),
-        ...(color !== undefined && { color }),
-      },
-    });
-    return NextResponse.json(habit);
-  } catch (error: unknown) {
-    if ((error as { code?: string }).code === "P2025") {
-      return NextResponse.json({ error: "Habit not found" }, { status: 404 });
-    }
-    return NextResponse.json({ error: "Failed to update habit" }, { status: 500 });
-  }
+  const updates: Record<string, unknown> = {};
+  if (name !== undefined) updates.name = name.trim();
+  if (description !== undefined) updates.description = description?.trim() || null;
+  if (color !== undefined) updates.color = color;
+
+  const { data, error } = await supabase
+    .from("Habit")
+    .update(updates)
+    .eq("id", params.id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
 }
 
 export async function DELETE(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    await prisma.habit.delete({ where: { id: params.id } });
-    return new NextResponse(null, { status: 204 });
-  } catch (error: unknown) {
-    if ((error as { code?: string }).code === "P2025") {
-      return NextResponse.json({ error: "Habit not found" }, { status: 404 });
-    }
-    return NextResponse.json({ error: "Failed to delete habit" }, { status: 500 });
-  }
+  const { error } = await supabase.from("Habit").delete().eq("id", params.id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return new NextResponse(null, { status: 204 });
 }
