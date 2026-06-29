@@ -1,13 +1,24 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/Sidebar";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Personal OS",
-  description: "Your personal operating system",
+  title: "Julian Christen — Bewerbung KV Immobilien | Engel & Völkers Chur",
+  description:
+    "Interaktive Bewerbung von Julian Eric Christen für die kaufmännische Lehre (KV) Immobilien ab Sommer 2027 bei Engel & Völkers in Chur.",
 };
 
 export default function RootLayout({
@@ -16,15 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={inter.className}>
-        <div className="flex h-screen overflow-hidden bg-background">
-          <Sidebar />
-          <main className="ml-56 flex-1 overflow-y-auto">
-            <div className="min-h-full p-8">{children}</div>
-          </main>
-        </div>
-      </body>
+    <html lang="de" className={`${inter.variable} ${cormorant.variable}`}>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }

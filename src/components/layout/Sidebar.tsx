@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/os", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/notes", label: "Notes", icon: FileText },
   { href: "/habits", label: "Habits", icon: Activity },
@@ -36,7 +36,7 @@ export function Sidebar() {
         <ul className="space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
+              href === "/os" ? pathname === "/os" : pathname.startsWith(href);
             return (
               <li key={href}>
                 <Link
